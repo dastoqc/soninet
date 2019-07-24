@@ -58,7 +58,7 @@ class CreateSound(object):
         channel_tuple = self.channels[chan]
         if channel_tuple[0].get_busy() != 1:
             channel_tuple[1] = pygame.mixer.Sound(self.pitchshift(pygame.sndarray.array(self.snds[chan]), semitone))
-            channel_tuple[1].set_volume(vol / 100.0)
+            channel_tuple[1].set_volume(vol)
             try:
                 channel_tuple[0].play(channel_tuple[1])
             except:
@@ -74,27 +74,29 @@ class AnimatedScatter(object):
         self.hop2all = hop2all
         self.selectID = 0
         self.CS = CreateSound()
+        self.minmax = [-6, 6, -6, 6]
         # Setup the figure and axes...
         self.fig, self.ax = plt.subplots()
         # Then setup FuncAnimation.
-        self.ani = FuncAnimation(self.fig, self.update, interval=5,
+        self.ani = FuncAnimation(self.fig, self.update, interval=100,
                                           init_func=self.setup_plot, blit=True)
 
     def setup_plot(self):
         """Initial drawing of the scatter plot."""
         self.scat = self.ax.scatter([0,0,0,0,0,0,0,0,0,0], [0,0,0,0,0,0,0,0,0,0])
-        self.ax.axis([-8, 8, -8, 8])
+        self.ax.axis(self.minmax)
         # For FuncAnimation's sake, we need to return the artist we'll be using
         # Note that it expects a sequence of artists, thus the trailing comma.
         return self.scat,
 
     def updatesound(self, cnt):
         # Scale the values to fit sine wave generation
-        semitone1 = self.hop1all[self.selectID][cnt][0]
-        vol1 = 8000 - self.hop1all[self.selectID][cnt][1]*50
-        semitone2 = self.hop2all[self.selectID][cnt][0]
-        vol2 = 8000 - self.hop2all[self.selectID][cnt][1]*50
-        print(vol1, semitone1, vol2, semitone2)
+        semitone1 = round(self.hop1all[self.selectID][cnt][0]/self.numpoints*12)
+        maxdist = math.sqrt((self.minmax[1]-self.minmax[0])*(self.minmax[1]-self.minmax[0])+(self.minmax[3]-self.minmax[2])*(self.minmax[3]-self.minmax[2]))
+        vol1 = 1 - self.hop1all[self.selectID][cnt][1]/(maxdist/2)
+        semitone2 = round(self.hop2all[self.selectID][cnt][0]/self.numpoints*12)
+        vol2 = 1 - self.hop2all[self.selectID][cnt][1]/(maxdist/2)
+        print(vol1, self.hop1all[self.selectID][cnt][1], semitone1, vol2, self.hop2all[self.selectID][cnt][1], semitone2)
         self.CS.play(vol1, semitone1, 0)
         self.CS.play(vol2, semitone2, 1)
 
@@ -144,8 +146,8 @@ if __name__ == "__main__":
             y = []
             if int(row[3])>0:
                 for nei in range(0,int(row[3])):
-                    x.append(float(row[3+nei*4+2]))
-                    y.append(float(row[3+nei*4+3]))
+                    x.append(float(row[3+nei*4+2])/100)
+                    y.append(float(row[3+nei*4+3])/100)
                     #print(x,y)
                 ave = math.sqrt(Average(x)*Average(x)+Average(y)*Average(y))
             else:
@@ -158,8 +160,8 @@ if __name__ == "__main__":
                     x = []
                     y = []
                     for nei in range(0,int(row[4+int(row[3])*4])):
-                        x.append(float(row[3+nei*4+2]))
-                        y.append(float(row[3+nei*4+3]))
+                        x.append(float(row[3+nei*4+2])/100)
+                        y.append(float(row[3+nei*4+3])/100)
                         #print(x,y)
                     ave = math.sqrt(Average(x)*Average(x)+Average(y)*Average(y))
                 else:
