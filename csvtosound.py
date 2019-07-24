@@ -1,5 +1,6 @@
 import csv
 import math
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -9,10 +10,14 @@ class CreateSound(object):
     def __init__(self):
         self.sampleRate = 44100
         # 44.1kHz, 16-bit signed, mono
-        pygame.mixer.pre_init(self.sampleRate, -16, 1)
+        pygame.mixer.init(self.sampleRate, size=16, channels=2, buffer=4096)
         pygame.init()
         self.channels = [[pygame.mixer.Channel(1),None,-1],[pygame.mixer.Channel(2),None,-1]]
         self.snds = [pygame.mixer.Sound('audio_files/bell001.flac'),pygame.mixer.Sound('audio_files/bell002.flac')]
+        for index, channel_tuple in enumerate(self.channels):
+            print('Test for ', index)
+            channel_tuple[0].play(self.snds[index])
+            time.sleep(1)
 
     def speedx(self, snd_array, factor):
         """ Speeds up / slows down a sound, by some factor. """
@@ -59,10 +64,8 @@ class CreateSound(object):
         if channel_tuple[0].get_busy() != 1:
             channel_tuple[1] = pygame.mixer.Sound(self.pitchshift(pygame.sndarray.array(self.snds[chan]), semitone))
             channel_tuple[1].set_volume(vol)
-            try:
-                channel_tuple[0].play(channel_tuple[1])
-            except:
-                pass
+
+            channel_tuple[0].play(channel_tuple[1])
 
 
 class AnimatedScatter(object):
